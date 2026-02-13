@@ -1,124 +1,81 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import {
-  DxcButton,
-  DxcDropdown,
-  DxcPaginator,
-  DxcChip
-} from '@dxc-technology/halstack-react';
-import LeadCard from './LeadCard';
-import LeadModal from './LeadModal';
-import './LeadsTab.css';
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  Typography,
+  Box,
+  Button
+} from '@mui/material';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 
 const LeadsTab = ({ leads, onRefresh }) => {
-  const [selectedStage, setSelectedStage] = useState('All');
-  const [showStageDropdown, setShowStageDropdown] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedLead, setSelectedLead] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const pageSize = 9;
-
-  const stages = ['All', 'New', 'Contacted', 'Nurturing', 'Qualified', 'Disqualified'];
-
-  const filteredLeads = useMemo(() => {
-    if (selectedStage === 'All') return leads;
-    return leads.filter(lead => lead.stage === selectedStage);
-  }, [leads, selectedStage]);
-
-  const paginatedLeads = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredLeads.slice(startIndex, startIndex + pageSize);
-  }, [filteredLeads, currentPage, pageSize]);
-
-  const totalPages = Math.ceil(filteredLeads.length / pageSize);
-
-  const handleFilterChange = (stage) => {
-    setSelectedStage(stage);
-    setCurrentPage(1);
-    setShowStageDropdown(false);
-  };
-
-  const handleLeadClick = (lead) => {
-    setSelectedLead(lead);
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedLead(null);
-  };
-
-  const handleSaveLead = async (updatedLead) => {
-    try {
-      // Save to ServiceNow
-      await onRefresh();
-      handleCloseModal();
-    } catch (error) {
-      console.error('Error saving lead:', error);
+  const getRatingColor = (rating) => {
+    switch (rating?.toLowerCase()) {
+      case 'hot': return 'error';
+      case 'warm': return 'warning';
+      case 'cold': return 'info';
+      default: return 'default';
     }
   };
 
-  const stageOptions = stages.map(stage => ({
-    label: stage,
-    value: stage
-  }));
-
   return (
-    <div className="leads-tab">
-      <div className="section-header">
-        <div className="title-section">
-          <h2 className="section-title">All Leads</h2>
-          <DxcChip
-            label={`${filteredLeads.length}`}
-            color="info"
-          />
-        </div>
-        
-        <div className="filter-section">
-          <DxcDropdown
-            label="Filter by Stage"
-            options={stageOptions}
-            onSelectOption={(value) => handleFilterChange(value)}
-            icon="filter"
-          />
-        </div>
-      </div>
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5" fontWeight="bold">
+          Leads
+        </Typography>
+        <Button variant="outlined" startIcon={<RefreshIcon />} onClick={onRefresh}>
+          Refresh
+        </Button>
+      </Box>
 
-      <div className="leads-grid">
-        {paginatedLeads.length > 0 ? (
-          paginatedLeads.map((lead) => (
-            <LeadCard
-              key={lead.sys_id}
-              lead={lead}
-              onClick={() => handleLeadClick(lead)}
-            />
-          ))
-        ) : (
-          <div className="no-data">
-            <i className="fas fa-inbox" style={{ fontSize: '3rem', color: '#ccc' }}></i>
-            <p>No leads found</p>
-          </div>
-        )}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="pagination-wrapper">
-          <DxcPaginator
-            currentPage={currentPage}
-            itemsPerPage={pageSize}
-            totalItems={filteredLeads.length}
-            onPageChange={setCurrentPage}
-          />
-        </div>
-      )}
-
-      {showModal && selectedLead && (
-        <LeadModal
-          lead={selectedLead}
-          onClose={handleCloseModal}
-          onSave={handleSaveLead}
-        />
-      )}
-    </div>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>Lead #</strong></TableCell>
+              <TableCell><strong>Name</strong></TableCell>
+              <TableCell><strong>Company</strong></TableCell>
+              <TableCell><strong>Email</strong></TableCell>
+              <TableCell><strong>Phone</strong></TableCell>
+              <TableCell><strong>Type</strong></TableCell>
+              <TableCell><strong>Rating</strong></TableCell>
+              <TableCell><strong>Stage</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {leads && leads.length > 0 ? (
+              leads.map((lead) => (
+                <TableRow key={lead.sys_id} hover>
+                  <TableCell>{lead.number}</TableCell>
+                  <TableCell>{lead.first_name + ' ' + lead.last_name}</TableCell>
+                  <TableCell>{lead.company}</TableCell>
+                  <TableCell>{lead.email}</TableCell>
+                  <TableCell>{lead.business_phone}</TableCell>
+                  <TableCell>{lead.lead_type}</TableCell>
+                  <TableCell>
+                    <Chip label={lead.lead_rating} color={getRatingColor(lead.lead_rating)} size="small" />
+                  </TableCell>
+                  <TableCell>{lead.stage}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  <Typography color="text.secondary">No leads found</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 };
 
