@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  DxcApplicationLayout,
   DxcHeader,
   DxcTabs,
   DxcInset,
-  ThemeProvider,
   DxcSpinner
 } from '@dxc-technology/halstack-react';
 import LeadsTab from './components/LeadsTab';
@@ -183,22 +181,19 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={darkMode ? 'dark' : 'light'}>
-      <DxcApplicationLayout>
-        <DxcApplicationLayout.Header>
-          <DxcHeader
-            content={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>
-                  Advisor Assistant
-                </h1>
-              </div>
-            }
-            underlined
-          />
-        </DxcApplicationLayout.Header>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <DxcHeader
+        content={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>
+              Advisor Assistant
+            </h1>
+          </div>
+        }
+        underlined
+      />
 
-        <DxcApplicationLayout.Main>
+      <div style={{ flex: 1 }}>
           <DxcInset space="2rem">
             {/* Dashboard Cards */}
             <DashboardCards
@@ -239,9 +234,8 @@ function App() {
               />
             </div>
           </DxcInset>
-        </DxcApplicationLayout.Main>
-      </DxcApplicationLayout>
-    </ThemeProvider>
+        </div>
+      </div>
   );
 }
 
