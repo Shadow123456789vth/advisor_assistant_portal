@@ -3,33 +3,36 @@ import {
   ThemeProvider,
   createTheme,
   CssBaseline,
+  Box,
+  BottomNavigation,
+  BottomNavigationAction,
+  Paper,
   AppBar,
   Toolbar,
+  IconButton,
+  Badge,
   Typography,
-  Container,
-  Box,
-  Tabs,
-  Tab,
-  CircularProgress,
-  Grid,
-  Card,
-  CardContent,
-  Chip
+  Fab
 } from '@mui/material';
 import {
-  PersonAdd as LeadsIcon,
-  BusinessCenter as OpportunitiesIcon,
-  Description as QuotesIcon,
-  History as HistoryIcon
+  Home as HomeIcon,
+  Assignment as TasksIcon,
+  People as CustomersIcon,
+  CalendarMonth as CalendarIcon,
+  MoreVert as MoreIcon,
+  Notifications as NotificationsIcon,
+  Search as SearchIcon,
+  Mic as VoiceIcon
 } from '@mui/icons-material';
-import LeadsTab from './components/LeadsTab';
-import OpportunitiesTab from './components/OpportunitiesTab';
-import QuotesTab from './components/QuotesTab';
-import RecentTab from './components/RecentTab';
-import serviceNowAPI from './services/serviceNowAPI';
-import './App.css';
-import dxcLogo from './assets/DXCHorizontalTaglineFullColorDark.png';
 
+// Import screens
+import HomeScreen from './screens/HomeScreen';
+import TasksScreen from './screens/TasksScreen';
+import CustomersScreen from './screens/CustomersScreen';
+import CalendarScreen from './screens/CalendarScreen';
+import MoreScreen from './screens/MoreScreen';
+
+// Mobile-first theme
 const theme = createTheme({
   palette: {
     primary: {
@@ -38,274 +41,175 @@ const theme = createTheme({
     secondary: {
       main: '#dc004e',
     },
+    background: {
+      default: '#f5f5f5',
+    },
+  },
+  components: {
+    MuiBottomNavigation: {
+      styleOverrides: {
+        root: {
+          height: 70,
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          textTransform: 'none',
+          fontWeight: 600,
+          padding: '12px 24px',
+        },
+      },
+    },
+  },
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    h4: {
+      fontWeight: 700,
+      fontSize: '1.75rem',
+    },
+    h5: {
+      fontWeight: 600,
+      fontSize: '1.5rem',
+    },
+    h6: {
+      fontWeight: 600,
+      fontSize: '1.25rem',
+    },
   },
 });
 
-function TabPanel({ children, value, index }) {
-  return (
-    <div role="tabpanel" hidden={value !== index}>
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
-}
-
 function App() {
-  const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
-    leads: [],
-    opportunities: [],
-    quotes: [],
-    recentItems: []
+  const [activeScreen, setActiveScreen] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(3);
+
+  // Mock data - will be replaced with ServiceNow API
+  const [userData, setUserData] = useState({
+    name: 'Sarah Anderson',
+    role: 'Senior Insurance Advisor',
+    avatar: null
   });
 
-  const [stats, setStats] = useState({
-    leadsCount: 0,
-    opportunitiesCount: 0,
-    quotesCount: 0,
-    recentCount: 0
-  });
+  const screens = [
+    { label: 'Home', icon: HomeIcon, component: HomeScreen },
+    { label: 'Tasks', icon: TasksIcon, component: TasksScreen },
+    { label: 'Customers', icon: CustomersIcon, component: CustomersScreen },
+    { label: 'Calendar', icon: CalendarIcon, component: CalendarScreen },
+    { label: 'More', icon: MoreIcon, component: MoreScreen },
+  ];
 
-  useEffect(() => {
-    loadAllData();
-  }, []);
+  const ActiveScreenComponent = screens[activeScreen].component;
 
-  const loadAllData = async () => {
-    try {
-      setLoading(true);
-      const [leads, opportunities, quotes, recentItems] = await Promise.all([
-        serviceNowAPI.getLeads(),
-        serviceNowAPI.getOpportunities(),
-        serviceNowAPI.getQuotes(),
-        serviceNowAPI.getRecentItems()
-      ]);
-
-      setDashboardData({
-        leads,
-        opportunities,
-        quotes,
-        recentItems
-      });
-
-      setStats({
-        leadsCount: leads.length,
-        opportunitiesCount: opportunities.length,
-        quotesCount: quotes.length,
-        recentCount: recentItems.length
-      });
-    } catch (error) {
-      console.error('Error loading data:', error);
-      loadMockData();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMockData = () => {
-    const mockLeads = [
-      {
-        sys_id: '1',
-        number: 'LEAD0001',
-        first_name: 'John',
-        last_name: 'Smith',
-        company: 'ABC Insurance',
-        email: 'john.smith@example.com',
-        business_phone: '555-0101',
-        lead_type: 'New Business',
-        lead_rating: 'Hot',
-        stage: 'Qualified'
-      },
-      {
-        sys_id: '2',
-        number: 'LEAD0002',
-        first_name: 'Sarah',
-        last_name: 'Johnson',
-        company: 'XYZ Corp',
-        email: 'sarah.j@example.com',
-        business_phone: '555-0102',
-        lead_type: 'Existing Business',
-        lead_rating: 'Warm',
-        stage: 'Contacted'
-      }
-    ];
-
-    const mockOpportunities = [
-      {
-        sys_id: '1',
-        number: 'OPP0001',
-        consumer: 'Johnson Family',
-        short_description: 'Life Insurance Policy',
-        amount: '$50,000',
-        industry: 'Insurance',
-        rating: 'High',
-        stage: 'Propose',
-        sales_cycle_type: 'Standard'
-      }
-    ];
-
-    const mockQuotes = [
-      {
-        sys_id: '1',
-        number: 'QTE0001',
-        description: 'Auto Insurance Quote',
-        amount: '$1,200',
-        status: 'Pending',
-        valid_until: '2025-01-31'
-      }
-    ];
-
-    setDashboardData({
-      leads: mockLeads,
-      opportunities: mockOpportunities,
-      quotes: mockQuotes,
-      recentItems: []
-    });
-
-    setStats({
-      leadsCount: mockLeads.length,
-      opportunitiesCount: mockOpportunities.length,
-      quotesCount: mockQuotes.length,
-      recentCount: 0
-    });
-  };
-
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
+  const handleVoiceAssist = () => {
+    // Voice assistant integration
+    console.log('Voice assist activated');
+    alert('Voice Assistant: "How can I help you today?"');
   };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        {/* Header */}
-        <AppBar position="static" elevation={0}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'hidden',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}>
+        {/* Top App Bar */}
+        <AppBar
+          position="static"
+          elevation={0}
+          sx={{
+            bgcolor: 'white',
+            color: 'text.primary',
+            borderBottom: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
           <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
-              Advisor Assistant
-            </Typography>
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" fontWeight="bold">
+                {screens[activeScreen].label}
+              </Typography>
+              {activeScreen === 0 && (
+                <Typography variant="caption" color="text.secondary">
+                  Good morning, {userData.name.split(' ')[0]}
+                </Typography>
+              )}
+            </Box>
+            <IconButton>
+              <SearchIcon />
+            </IconButton>
+            <IconButton>
+              <Badge badgeContent={notificationCount} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
           </Toolbar>
         </AppBar>
 
-        {/* Main Content */}
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
-          {/* Dashboard Cards */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <LeadsIcon color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Leads</Typography>
-                  </Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.leadsCount}
-                  </Typography>
-                  <Chip label="Active" size="small" color="success" sx={{ mt: 1 }} />
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <OpportunitiesIcon color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Opportunities</Typography>
-                  </Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.opportunitiesCount}
-                  </Typography>
-                  <Chip label="In Progress" size="small" color="warning" sx={{ mt: 1 }} />
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <QuotesIcon color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Quotes</Typography>
-                  </Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.quotesCount}
-                  </Typography>
-                  <Chip label="Pending" size="small" color="info" sx={{ mt: 1 }} />
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <HistoryIcon color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Recent</Typography>
-                  </Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.recentCount}
-                  </Typography>
-                  <Chip label="Updated" size="small" color="default" sx={{ mt: 1 }} />
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
-          {/* Tabs */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={activeTab} onChange={handleTabChange}>
-              <Tab label={`Leads (${stats.leadsCount})`} icon={<LeadsIcon />} iconPosition="start" />
-              <Tab label={`Opportunities (${stats.opportunitiesCount})`} icon={<OpportunitiesIcon />} iconPosition="start" />
-              <Tab label={`Quotes (${stats.quotesCount})`} icon={<QuotesIcon />} iconPosition="start" />
-              <Tab label={`Recent (${stats.recentCount})`} icon={<HistoryIcon />} iconPosition="start" />
-            </Tabs>
-          </Box>
-
-          {/* Tab Panels */}
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-              <CircularProgress size={60} />
-            </Box>
-          ) : (
-            <>
-              <TabPanel value={activeTab} index={0}>
-                <LeadsTab leads={dashboardData.leads} onRefresh={loadAllData} />
-              </TabPanel>
-              <TabPanel value={activeTab} index={1}>
-                <OpportunitiesTab opportunities={dashboardData.opportunities} onRefresh={loadAllData} />
-              </TabPanel>
-              <TabPanel value={activeTab} index={2}>
-                <QuotesTab quotes={dashboardData.quotes} onRefresh={loadAllData} />
-              </TabPanel>
-              <TabPanel value={activeTab} index={3}>
-                <RecentTab recentItems={dashboardData.recentItems} />
-              </TabPanel>
-            </>
-          )}
-        </Container>
-
-        {/* Footer */}
-        <Box
-          component="footer"
-          sx={{
-            py: 3,
-            px: 2,
-            mt: 'auto',
-            bgcolor: 'background.paper',
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Powered by
-          </Typography>
-          <img
-            src={dxcLogo}
-            alt="DXC Technology"
-            style={{ height: '40px', opacity: 0.8 }}
-          />
+        {/* Main Content Area */}
+        <Box sx={{
+          flex: 1,
+          overflow: 'auto',
+          bgcolor: 'background.default',
+          position: 'relative'
+        }}>
+          <ActiveScreenComponent userData={userData} />
         </Box>
+
+        {/* Voice Assistant FAB */}
+        <Fab
+          color="secondary"
+          sx={{
+            position: 'fixed',
+            bottom: 90,
+            right: 16,
+            zIndex: 1000,
+          }}
+          onClick={handleVoiceAssist}
+        >
+          <VoiceIcon />
+        </Fab>
+
+        {/* Bottom Navigation */}
+        <Paper
+          sx={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1000
+          }}
+          elevation={3}
+        >
+          <BottomNavigation
+            value={activeScreen}
+            onChange={(event, newValue) => setActiveScreen(newValue)}
+            showLabels
+          >
+            {screens.map((screen, index) => (
+              <BottomNavigationAction
+                key={index}
+                label={screen.label}
+                icon={<screen.icon />}
+              />
+            ))}
+          </BottomNavigation>
+        </Paper>
       </Box>
     </ThemeProvider>
   );
