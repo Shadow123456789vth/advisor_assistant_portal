@@ -32,6 +32,9 @@ import CustomersScreen from './screens/CustomersScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import MoreScreen from './screens/MoreScreen';
 
+// Import voice commands
+import useVoiceCommands from './hooks/useVoiceCommands';
+
 // Mobile-first theme
 const theme = createTheme({
   palette: {
@@ -93,6 +96,9 @@ const theme = createTheme({
 function App() {
   const [activeScreen, setActiveScreen] = useState(0);
   const [notificationCount, setNotificationCount] = useState(3);
+  const homeScreenRef = useRef(null);
+  const tasksScreenRef = useRef(null);
+  const calendarScreenRef = useRef(null);
 
   // Mock data - will be replaced with ServiceNow API
   const [userData, setUserData] = useState({
@@ -111,10 +117,63 @@ function App() {
 
   const ActiveScreenComponent = screens[activeScreen].component;
 
+  // Handle voice commands
+  const handleCommand = (command) => {
+    console.log('Received command:', command);
+
+    switch (command.type) {
+      case 'CREATE_TASK':
+        setActiveScreen(1); // Navigate to Tasks screen
+        // The task description is in command.data
+        break;
+
+      case 'SCHEDULE_APPOINTMENT':
+        setActiveScreen(3); // Navigate to Calendar screen
+        break;
+
+      case 'VIEW_CUSTOMERS':
+        setActiveScreen(2); // Navigate to Customers screen
+        break;
+
+      case 'READ_TASKS':
+        setActiveScreen(1);
+        // Could trigger reading tasks aloud
+        break;
+
+      case 'READ_APPOINTMENTS':
+        setActiveScreen(3);
+        // Could trigger reading appointments aloud
+        break;
+
+      case 'DAILY_SUMMARY':
+        setActiveScreen(0);
+        // Trigger daily summary on home screen
+        if (homeScreenRef.current?.speakDailySummary) {
+          setTimeout(() => homeScreenRef.current.speakDailySummary(), 500);
+        }
+        break;
+
+      case 'NAVIGATE':
+        setActiveScreen(command.screen);
+        break;
+
+      default:
+        console.log('Unknown command type:', command.type);
+    }
+  };
+
+  const { isListening, startListening, speakAndListen } = useVoiceCommands(handleCommand);
+
   const handleVoiceAssist = () => {
-    // Voice assistant integration
-    console.log('Voice assist activated');
-    alert('Voice Assistant: "How can I help you today?"');
+    // Start conversational mode
+    const greetings = [
+      "Hi there! What can I help you with today?",
+      "Hello! How can I assist you?",
+      "Hey! What would you like to do?",
+      "Hi! I'm here to help. What do you need?"
+    ];
+    const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    speakAndListen(greeting, 100);
   };
 
   return (
@@ -179,6 +238,21 @@ function App() {
             bottom: 90,
             right: 16,
             zIndex: 1000,
+            animation: isListening ? 'pulse 1.5s ease-in-out infinite' : 'none',
+            '@keyframes pulse': {
+              '0%': {
+                transform: 'scale(1)',
+                boxShadow: '0 0 0 0 rgba(0, 137, 123, 0.7)'
+              },
+              '50%': {
+                transform: 'scale(1.05)',
+                boxShadow: '0 0 0 10px rgba(0, 137, 123, 0)'
+              },
+              '100%': {
+                transform: 'scale(1)',
+                boxShadow: '0 0 0 0 rgba(0, 137, 123, 0)'
+              }
+            }
           }}
           onClick={handleVoiceAssist}
         >

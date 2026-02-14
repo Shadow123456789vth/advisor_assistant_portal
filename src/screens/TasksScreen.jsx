@@ -173,9 +173,9 @@ const TasksScreen = () => {
       speak(getRandomResponse(completionResponses));
     } else {
       const reopenResponses = [
-        'Okay, I've reopened that task for you',
-        'No problem, marked that as incomplete',
-        'Got it, that task is back on your list'
+        `Okay, I've reopened that task for you`,
+        `No problem, marked that as incomplete`,
+        `Got it, that task is back on your list`
       ];
       speak(getRandomResponse(reopenResponses));
     }
