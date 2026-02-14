@@ -95,7 +95,7 @@ const HomeScreen = ({ userData }) => {
   return (
     <Container maxWidth="md" sx={{ pb: 10, pt: 2 }}>
       {/* Productivity Overview */}
-      <Card sx={{ mb: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+      <Card sx={{ mb: 2, background: 'linear-gradient(135deg, #1976d2 0%, #00897b 100%)', color: 'white' }}>
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', mr: 2 }}>
