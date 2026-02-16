@@ -31,6 +31,7 @@ import TasksScreen from './screens/TasksScreen';
 import CustomersScreen from './screens/CustomersScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import MoreScreen from './screens/MoreScreen';
+import DemoScreen from './screens/DemoScreen';
 
 // Import voice commands
 import useVoiceCommands from './hooks/useVoiceCommands';
@@ -96,6 +97,7 @@ const theme = createTheme({
 function App() {
   const [activeScreen, setActiveScreen] = useState(0);
   const [notificationCount, setNotificationCount] = useState(3);
+  const [showDemo, setShowDemo] = useState(false);
   const homeScreenRef = useRef(null);
   const tasksScreenRef = useRef(null);
   const calendarScreenRef = useRef(null);
@@ -116,6 +118,14 @@ function App() {
   ];
 
   const ActiveScreenComponent = screens[activeScreen].component;
+
+  const handleNavigateToDemo = () => {
+    setShowDemo(true);
+  };
+
+  const handleBackFromDemo = () => {
+    setShowDemo(false);
+  };
 
   // Handle voice commands
   const handleCommand = (command) => {
@@ -199,24 +209,35 @@ function App() {
           }}
         >
           <Toolbar>
+            {showDemo && (
+              <IconButton onClick={handleBackFromDemo} sx={{ mr: 1 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </IconButton>
+            )}
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="h6" fontWeight="bold">
-                {screens[activeScreen].label}
+                {showDemo ? 'Smart Engagement' : screens[activeScreen].label}
               </Typography>
-              {activeScreen === 0 && (
+              {activeScreen === 0 && !showDemo && (
                 <Typography variant="caption" color="text.secondary">
                   Good morning, {userData.name.split(' ')[0]}
                 </Typography>
               )}
             </Box>
-            <IconButton>
-              <SearchIcon />
-            </IconButton>
-            <IconButton>
-              <Badge badgeContent={notificationCount} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+            {!showDemo && (
+              <>
+                <IconButton>
+                  <SearchIcon />
+                </IconButton>
+                <IconButton>
+                  <Badge badgeContent={notificationCount} color="error">
+                    <NotificationsIcon />
+                  </Badge>
+                </IconButton>
+              </>
+            )}
           </Toolbar>
         </AppBar>
 
@@ -227,7 +248,14 @@ function App() {
           bgcolor: 'background.default',
           position: 'relative'
         }}>
-          <ActiveScreenComponent userData={userData} />
+          {showDemo ? (
+            <DemoScreen />
+          ) : (
+            <ActiveScreenComponent
+              userData={userData}
+              onNavigateToDemo={handleNavigateToDemo}
+            />
+          )}
         </Box>
 
         {/* Voice Assistant FAB */}
@@ -260,30 +288,32 @@ function App() {
         </Fab>
 
         {/* Bottom Navigation */}
-        <Paper
-          sx={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 1000
-          }}
-          elevation={3}
-        >
-          <BottomNavigation
-            value={activeScreen}
-            onChange={(event, newValue) => setActiveScreen(newValue)}
-            showLabels
+        {!showDemo && (
+          <Paper
+            sx={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1000
+            }}
+            elevation={3}
           >
-            {screens.map((screen, index) => (
-              <BottomNavigationAction
-                key={index}
-                label={screen.label}
-                icon={<screen.icon />}
-              />
-            ))}
-          </BottomNavigation>
-        </Paper>
+            <BottomNavigation
+              value={activeScreen}
+              onChange={(event, newValue) => setActiveScreen(newValue)}
+              showLabels
+            >
+              {screens.map((screen, index) => (
+                <BottomNavigationAction
+                  key={index}
+                  label={screen.label}
+                  icon={<screen.icon />}
+                />
+              ))}
+            </BottomNavigation>
+          </Paper>
+        )}
       </Box>
     </ThemeProvider>
   );
