@@ -21,7 +21,8 @@ import {
   Alert,
   CircularProgress,
   ToggleButtonGroup,
-  ToggleButton
+  ToggleButton,
+  alpha
 } from '@mui/material';
 import {
   Event,
@@ -32,6 +33,18 @@ import {
   MicOff,
   Close
 } from '@mui/icons-material';
+
+// Color Palette
+const colors = {
+  orange: '#F6921E',
+  yellow: '#E8DE23',
+  lightGreen: '#8BC53F',
+  green: '#37A526',
+  lightBlue: '#00ADEE',
+  blue: '#1B75BB',
+  red: '#D02E2E',
+  paleAqua: '#F2F7F6',
+};
 
 const CalendarScreen = () => {
   const { speak, getRandomResponse } = useSpeech();
@@ -170,27 +183,48 @@ const CalendarScreen = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ pb: 10, pt: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5" fontWeight="bold">Today's Appointments</Typography>
+    <Container maxWidth="lg" sx={{ pb: 10, pt: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontFamily: 'Roboto Slab, serif',
+            fontWeight: 700,
+            color: colors.blue
+          }}
+        >
+          Today's Appointments
+        </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <IconButton
-            color="secondary"
             onClick={handleVoiceClick}
             sx={{
-              bgcolor: 'secondary.main',
+              width: 48,
+              height: 48,
+              borderRadius: 2,
+              background: `linear-gradient(135deg, ${colors.green} 0%, ${colors.lightGreen} 100%)`,
               color: 'white',
-              '&:hover': { bgcolor: 'secondary.dark' }
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: `0 6px 16px ${alpha(colors.green, 0.4)}`
+              }
             }}
           >
             <Mic />
           </IconButton>
           <IconButton
-            color="primary"
             sx={{
-              bgcolor: 'primary.main',
+              width: 48,
+              height: 48,
+              borderRadius: 2,
+              background: `linear-gradient(135deg, ${colors.lightBlue} 0%, ${colors.blue} 100%)`,
               color: 'white',
-              '&:hover': { bgcolor: 'primary.dark' }
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: `0 6px 16px ${alpha(colors.lightBlue, 0.4)}`
+              }
             }}
           >
             <Add />
@@ -199,14 +233,68 @@ const CalendarScreen = () => {
       </Box>
 
       {appointments.map(apt => (
-        <Card key={apt.id} sx={{ mb: 2 }}>
-          <CardContent>
+        <Card
+          elevation={0}
+          key={apt.id}
+          sx={{
+            mb: 2.5,
+            borderRadius: 3,
+            border: `1px solid ${alpha(colors.blue, 0.1)}`,
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: `0 4px 12px ${alpha(colors.lightBlue, 0.15)}`
+            }
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'start' }}>
-              {apt.type === 'video' ? <VideoCall color="primary" sx={{ mr: 2 }} /> : <Person color="primary" sx={{ mr: 2 }} />}
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mr: 2.5,
+                  bgcolor: apt.type === 'video'
+                    ? alpha(colors.lightBlue, 0.15)
+                    : alpha(colors.green, 0.15)
+                }}
+              >
+                {apt.type === 'video' ? (
+                  <VideoCall sx={{ fontSize: 32, color: colors.lightBlue }} />
+                ) : (
+                  <Person sx={{ fontSize: 32, color: colors.green }} />
+                )}
+              </Box>
               <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" fontWeight="600">{apt.time}</Typography>
-                <Typography variant="body2">{apt.title}</Typography>
-                <Chip label={apt.duration} size="small" sx={{ mt: 1 }} />
+                <Typography
+                  variant="h5"
+                  fontWeight="600"
+                  sx={{
+                    color: colors.blue,
+                    mb: 1,
+                    fontFamily: 'Roboto Slab, serif'
+                  }}
+                >
+                  {apt.time}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1.5, fontWeight: 500 }}>
+                  {apt.title}
+                </Typography>
+                <Chip
+                  label={apt.duration}
+                  size="medium"
+                  icon={<Event sx={{ color: `${colors.orange} !important` }} />}
+                  sx={{
+                    fontWeight: 600,
+                    bgcolor: alpha(colors.orange, 0.15),
+                    color: colors.orange,
+                    border: 'none'
+                  }}
+                />
               </Box>
             </Box>
           </CardContent>

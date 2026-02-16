@@ -12,7 +12,8 @@ import {
   IconButton,
   Badge,
   Typography,
-  Fab
+  Fab,
+  alpha
 } from '@mui/material';
 import {
   Home as HomeIcon,
@@ -36,17 +37,43 @@ import DemoScreen from './screens/DemoScreen';
 // Import voice commands
 import useVoiceCommands from './hooks/useVoiceCommands';
 
-// Mobile-first theme
+// Vibrant color palette
+const colors = {
+  orange: '#F6921E',
+  yellow: '#E8DE23',
+  lightGreen: '#8BC53F',
+  green: '#37A526',
+  lightBlue: '#00ADEE',
+  blue: '#1B75BB',
+  red: '#D02E2E',
+  paleAqua: '#F2F7F6',
+};
+
+// Mobile-first theme with vibrant colors
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: colors.lightBlue,
+      dark: colors.blue,
     },
     secondary: {
-      main: '#00897b',
+      main: colors.green,
+      light: colors.lightGreen,
+    },
+    success: {
+      main: colors.green,
+      light: colors.lightGreen,
+    },
+    warning: {
+      main: colors.orange,
+      light: colors.yellow,
+    },
+    error: {
+      main: colors.red,
     },
     background: {
-      default: '#f5f5f5',
+      default: colors.paleAqua,
+      paper: '#FFFFFF',
     },
   },
   components: {
@@ -55,6 +82,17 @@ const theme = createTheme({
         root: {
           height: 70,
           paddingBottom: 'env(safe-area-inset-bottom)',
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #F2F7F6 100%)',
+          borderTop: `2px solid ${colors.lightBlue}`,
+        },
+      },
+    },
+    MuiBottomNavigationAction: {
+      styleOverrides: {
+        root: {
+          '&.Mui-selected': {
+            color: colors.lightBlue,
+          },
         },
       },
     },
@@ -62,7 +100,12 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 16,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          boxShadow: '0 4px 16px rgba(0, 173, 238, 0.15)',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 8px 24px rgba(0, 173, 238, 0.25)',
+          },
         },
       },
     },
@@ -74,20 +117,36 @@ const theme = createTheme({
           fontWeight: 600,
           padding: '12px 24px',
         },
+        contained: {
+          boxShadow: '0 4px 12px rgba(0, 173, 238, 0.3)',
+          '&:hover': {
+            boxShadow: '0 6px 16px rgba(0, 173, 238, 0.4)',
+          },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          fontWeight: 600,
+        },
       },
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: 'Roboto, sans-serif',
     h4: {
+      fontFamily: 'Roboto Slab, serif',
       fontWeight: 700,
       fontSize: '1.75rem',
     },
     h5: {
+      fontFamily: 'Roboto Slab, serif',
       fontWeight: 600,
       fontSize: '1.5rem',
     },
     h6: {
+      fontFamily: 'Roboto Slab, serif',
       fontWeight: 600,
       fontSize: '1.25rem',
     },
@@ -202,10 +261,9 @@ function App() {
           position="static"
           elevation={0}
           sx={{
-            bgcolor: 'white',
+            background: 'linear-gradient(135deg, #FFFFFF 0%, #F2F7F6 100%)',
             color: 'text.primary',
-            borderBottom: '1px solid',
-            borderColor: 'divider'
+            borderBottom: `3px solid ${colors.lightBlue}`,
           }}
         >
           <Toolbar>
@@ -245,7 +303,7 @@ function App() {
         <Box sx={{
           flex: 1,
           overflow: 'auto',
-          bgcolor: 'background.default',
+          background: `linear-gradient(180deg, ${colors.paleAqua} 0%, ${alpha(colors.lightBlue, 0.1)} 100%)`,
           position: 'relative'
         }}>
           {showDemo ? (
@@ -260,12 +318,18 @@ function App() {
 
         {/* Voice Assistant FAB */}
         <Fab
-          color="secondary"
           sx={{
             position: 'fixed',
             bottom: 90,
             right: 16,
             zIndex: 1000,
+            background: `linear-gradient(135deg, ${colors.lightBlue} 0%, ${colors.blue} 100%)`,
+            color: 'white',
+            boxShadow: `0 4px 16px ${alpha(colors.lightBlue, 0.4)}`,
+            '&:hover': {
+              background: `linear-gradient(135deg, ${colors.blue} 0%, ${colors.lightBlue} 100%)`,
+              boxShadow: `0 6px 20px ${alpha(colors.lightBlue, 0.5)}`,
+            },
             animation: isListening ? 'pulse 1.5s ease-in-out infinite' : 'none',
             '@keyframes pulse': {
               '0%': {
