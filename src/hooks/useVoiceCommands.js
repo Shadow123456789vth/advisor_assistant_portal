@@ -198,6 +198,27 @@ export const useVoiceCommands = (onCommand) => {
       return;
     }
 
+    // Illustration commands - detect policy illustration requests
+    if (command.includes('illustration') || command.includes('run illustration') ||
+        command.includes('policy projection') || command.includes('show illustration') ||
+        (command.includes('withdrawal') && (command.includes('age') || command.includes('monthly')))) {
+      console.log('📊 Illustration request detected:', command);
+
+      // Extract parameters from command
+      const ageMatch = command.match(/age (\d+)/i);
+      const withdrawalMatch = command.match(/\$?(\d+(?:,\d{3})*)/);
+
+      const params = {
+        age: ageMatch ? parseInt(ageMatch[1]) : 65,
+        withdrawal: withdrawalMatch ? parseInt(withdrawalMatch[1].replace(/,/g, '')) : 2000,
+      };
+
+      console.log('✅ ILLUSTRATION TRIGGERED with params:', params);
+      onCommand({ type: 'SHOW_ILLUSTRATION', params });
+      speak(`Generating policy illustration for age ${params.age} with $${params.withdrawal.toLocaleString()} monthly withdrawals. Analyzing projections and insights.`);
+      return;
+    }
+
     // Specific engagement command (triggers demo) - Check this FIRST for specific intent
     const hasBirthdayIntent = command.includes('send birthday') || command.includes('birthday wishes') || command.includes('birthday message');
 
@@ -301,7 +322,7 @@ export const useVoiceCommands = (onCommand) => {
 
     // Help command
     if (command.includes('help') || command.includes('what can you do')) {
-      const helpMessage = "I can help you create tasks, schedule appointments, add customer notes, read your tasks and appointments, provide daily summaries, show you intelligent customer engagement demos, open enterprise modules like income planning, life-stage intelligence, meeting prep, and more. Try saying 'show demo' or 'send birthday wishes to Sam Wright' to see it in action!";
+      const helpMessage = "I can help you create tasks, schedule appointments, add customer notes, run policy illustrations, read your tasks and appointments, provide daily summaries, show you intelligent customer engagement demos, open enterprise modules like income planning, life-stage intelligence, meeting prep, and more. Try saying 'run an illustration for age 65 with two thousand dollar withdrawals' or 'send birthday wishes to Sam Wright' to see it in action!";
       speak(helpMessage);
       setTimeout(() => {
         speak("What would you like to do?");

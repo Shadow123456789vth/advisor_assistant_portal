@@ -650,7 +650,14 @@ const DemoScreen = ({ customerName = 'Sam Wright' }) => {
               }}
             />
           </Box>
+        </Paper>
 
+        <Card
+          sx={{
+            background: colors.paleAqua,
+            boxShadow: '0 8px 32px rgba(246, 146, 30, 0.2)',
+          }}
+        >
         <CardContent sx={{ p: 4 }}>
           <Stack spacing={3}>
             <Paper
@@ -814,6 +821,12 @@ const DemoScreen = ({ customerName = 'Sam Wright' }) => {
           </Box>
         </Paper>
 
+        <Card
+          sx={{
+            background: colors.paleAqua,
+            boxShadow: '0 8px 32px rgba(27, 117, 187, 0.2)',
+          }}
+        >
         <CardContent sx={{ p: 4 }}>
           <Paper
             elevation={0}
@@ -1613,3 +1626,4 @@ Senior Advisor`}
 };
 
 export default DemoScreen;
+ 

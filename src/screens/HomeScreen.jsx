@@ -571,6 +571,29 @@ const HomeScreen = ({ userData, onNavigateToDemo, addNotification }) => {
   const processSearchCommand = (command) => {
     const lowerCommand = command.toLowerCase();
 
+    // Check for illustration pattern
+    if (lowerCommand.includes('illustration') || lowerCommand.includes('run illustration') ||
+        lowerCommand.includes('policy projection') || lowerCommand.includes('show illustration') ||
+        (lowerCommand.includes('withdrawal') && (lowerCommand.includes('age') || lowerCommand.includes('monthly')))) {
+      // Extract parameters from command
+      const ageMatch = command.match(/age (\d+)/i);
+      const withdrawalMatch = command.match(/\$?(\d+(?:,\d{3})*)/);
+
+      const params = {
+        age: ageMatch ? parseInt(ageMatch[1]) : 65,
+        withdrawal: withdrawalMatch ? parseInt(withdrawalMatch[1].replace(/,/g, '')) : 2000,
+      };
+
+      speak(`Generating policy illustration for age ${params.age} with $${params.withdrawal.toLocaleString()} monthly withdrawals`);
+
+      // Navigate to illustration workflow
+      if (onNavigateToModule) {
+        onNavigateToModule('illustration-workflow', params);
+      }
+      setSearchInput('');
+      return;
+    }
+
     // Check for birthday wishes pattern
     if (lowerCommand.includes('send birthday') || lowerCommand.includes('birthday wishes')) {
       // Extract customer name

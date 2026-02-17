@@ -50,6 +50,7 @@ import CustomersScreen from './screens/CustomersScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import MoreScreen from './screens/MoreScreen';
 import DemoScreen from './screens/DemoScreen';
+import IllustrationWorkflowScreen from './screens/IllustrationWorkflowScreen';
 
 // Import voice commands
 import useVoiceCommands from './hooks/useVoiceCommands';
@@ -193,6 +194,8 @@ function App() {
   const [demoCustomerName, setDemoCustomerName] = useState('Sam Wright');
   const [showNotifications, setShowNotifications] = useState(false);
   const [toastNotification, setToastNotification] = useState(null);
+  const [showIllustration, setShowIllustration] = useState(false);
+  const [illustrationParams, setIllustrationParams] = useState({ age: 65, withdrawal: 2000 });
   const homeScreenRef = useRef(null);
   const tasksScreenRef = useRef(null);
   const calendarScreenRef = useRef(null);
@@ -340,13 +343,31 @@ function App() {
     setShowDemo(false);
   };
 
-  const handleNavigateToModule = (moduleId) => {
-    setActiveModule(moduleId);
-    setShowDemo(false);
+  const handleNavigateToModule = (moduleId, params) => {
+    if (moduleId === 'illustration-workflow') {
+      setIllustrationParams(params || { age: 65, withdrawal: 2000 });
+      setShowIllustration(true);
+      setShowDemo(false);
+      setActiveModule(null);
+    } else {
+      setActiveModule(moduleId);
+      setShowDemo(false);
+      setShowIllustration(false);
+    }
   };
 
   const handleBackFromModule = () => {
     setActiveModule(null);
+  };
+
+  const handleBackFromIllustration = () => {
+    setShowIllustration(false);
+  };
+
+  const handleIllustrationToEngagement = (customerName) => {
+    setShowIllustration(false);
+    setDemoCustomerName(customerName);
+    setShowDemo(true);
   };
 
   // Handle voice commands
@@ -400,6 +421,15 @@ function App() {
         }
         break;
 
+      case 'SHOW_ILLUSTRATION':
+        // Navigate to illustration workflow screen
+        console.log('📊 SHOW_ILLUSTRATION command received with params:', command.params);
+        setIllustrationParams(command.params || { age: 65, withdrawal: 2000 });
+        setShowIllustration(true);
+        setShowDemo(false);
+        setActiveModule(null);
+        break;
+
       case 'SHOW_DEMO':
         // Navigate to demo screen
         const customerName = command.customerName || 'Sam Wright';
@@ -437,6 +467,7 @@ function App() {
 
   // Get current screen title
   const getCurrentTitle = () => {
+    if (showIllustration) return 'Policy Illustration & Insights';
     if (showDemo) return 'Personalized Engagement';
     if (activeModule) return modules[activeModule]?.title || 'Module';
     return screens[activeScreen].label;
@@ -469,8 +500,8 @@ function App() {
                     }}
                   >
                     <Toolbar>
-                      {(showDemo || activeModule) && (
-                        <IconButton onClick={showDemo ? handleBackFromDemo : handleBackFromModule} sx={{ mr: 1 }}>
+                      {(showDemo || activeModule || showIllustration) && (
+                        <IconButton onClick={showIllustration ? handleBackFromIllustration : showDemo ? handleBackFromDemo : handleBackFromModule} sx={{ mr: 1 }}>
                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
@@ -480,13 +511,13 @@ function App() {
                         <Typography variant="h6" fontWeight="bold">
                           {getCurrentTitle()}
                         </Typography>
-                        {activeScreen === 0 && !showDemo && !activeModule && (
+                        {activeScreen === 0 && !showDemo && !activeModule && !showIllustration && (
                           <Typography variant="caption" color="text.secondary">
                             Good morning, {userData.name.split(' ')[0]}
                           </Typography>
                         )}
                       </Box>
-                      {!showDemo && !activeModule && (
+                      {!showDemo && !activeModule && !showIllustration && (
                         <>
                           <IconButton>
                             <SearchIcon />
@@ -508,7 +539,13 @@ function App() {
                     background: `linear-gradient(180deg, ${colors.paleAqua} 0%, ${alpha(colors.lightBlue, 0.1)} 100%)`,
                     position: 'relative'
                   }}>
-                    {showDemo ? (
+                    {showIllustration ? (
+                      <IllustrationWorkflowScreen
+                        onClose={handleBackFromIllustration}
+                        onNavigateToEngagement={handleIllustrationToEngagement}
+                        illustrationParams={illustrationParams}
+                      />
+                    ) : showDemo ? (
                       <DemoScreen customerName={demoCustomerName} />
                     ) : activeModule ? (
                       <Suspense fallback={
@@ -564,7 +601,7 @@ function App() {
         </Fab>
 
                   {/* Bottom Navigation */}
-                  {!showDemo && !activeModule && (
+                  {!showDemo && !activeModule && !showIllustration && (
                     <Paper
                       sx={{
                         position: 'fixed',
