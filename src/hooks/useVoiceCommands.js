@@ -230,12 +230,28 @@ export const useVoiceCommands = (onCommand) => {
 
       // Extract parameters from command
       const ageMatch = command.match(/age (\d+)/i);
-      const withdrawalMatch = command.match(/\$?(\d+(?:,\d{3})*)/);
+
+      // Extract withdrawal amount - look for dollar amount after "with", "withdrawals", etc.
+      const withdrawalPatterns = [
+        /with\s+\$?(\d+(?:,\d{3})*)\s*(?:monthly|withdrawals?|per month)?/i,
+        /\$(\d+(?:,\d{3})*)\s+(?:monthly|withdrawals?|per month)/i,
+        /withdrawals?\s+(?:of\s+)?\$?(\d+(?:,\d{3})*)/i,
+      ];
+
+      let withdrawalAmount = 2000; // Default
+      for (const pattern of withdrawalPatterns) {
+        const match = command.match(pattern);
+        if (match && match[1]) {
+          withdrawalAmount = parseInt(match[1].replace(/,/g, ''));
+          console.log('✅ Extracted withdrawal amount:', withdrawalAmount);
+          break;
+        }
+      }
 
       const params = {
         customerName: customerName,
         age: ageMatch ? parseInt(ageMatch[1]) : 65,
-        monthlyWithdrawal: withdrawalMatch ? parseInt(withdrawalMatch[1].replace(/,/g, '')) : 2000,
+        monthlyWithdrawal: withdrawalAmount,
       };
 
       console.log('✅ ILLUSTRATION TRIGGERED with params:', params);

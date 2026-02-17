@@ -574,6 +574,84 @@ const HomeScreen = ({ userData, onNavigateToDemo, onNavigateToModule, addNotific
 
     console.log('🔍 Processing search command:', originalCommand);
 
+    // Check for client review prep pattern
+    if (lowerCommand.includes('prep me for') || lowerCommand.includes('prepare for') ||
+        lowerCommand.includes('client review') || lowerCommand.includes('meeting prep') ||
+        (lowerCommand.includes('prep') && (lowerCommand.includes('meeting') || lowerCommand.includes('client')))) {
+
+      console.log('✅ Client review prep pattern matched!');
+
+      // Extract meeting time (e.g., "2:30", "3pm", "10:00 AM")
+      const timePatterns = [
+        /(\d{1,2}:\d{2}(?:\s*[ap]m)?)/i,
+        /(\d{1,2}\s*[ap]m)/i,
+      ];
+
+      let meetingTime = '2:30 PM'; // Default
+      for (const pattern of timePatterns) {
+        const match = originalCommand.match(pattern);
+        if (match && match[1]) {
+          meetingTime = match[1].trim();
+          console.log('✅ Extracted meeting time:', meetingTime);
+          break;
+        }
+      }
+
+      // Extract customer name if mentioned - Enhanced patterns
+      let customerName = 'Sam Wright'; // Default
+      const namePatterns = [
+        // "prep me for John Smith at 2:30"
+        /(?:prep\s+(?:me\s+)?for|prepare\s+for)\s+(?:my\s+)?([a-z][a-z\s]+?)(?:\s+at\s+\d|\s+meeting|\s+review|\s*$)/i,
+        // "client review for John Smith"
+        /client\s+review\s+(?:for\s+)?([a-z][a-z\s]+?)(?:\s+at\s+\d|\s+meeting|\s*$)/i,
+        // "meeting prep for John Smith"
+        /meeting\s+(?:prep|preparation)\s+(?:for\s+)?([a-z][a-z\s]+?)(?:\s+at\s+\d|\s+meeting|\s*$)/i,
+        // "prep for my 2:30 with John Smith"
+        /prep.*?(?:with|meeting\s+with)\s+([a-z][a-z\s]+?)(?:\s+at|\s*$)/i,
+        // "John Smith meeting at 2:30" or "John Smith at 2:30"
+        /^([a-z][a-z\s]+?)\s+(?:meeting|review|client|at)\s+\d/i,
+      ];
+
+      for (const pattern of namePatterns) {
+        const match = originalCommand.match(pattern);
+        if (match && match[1]) {
+          const extractedName = match[1].trim();
+          // Filter out common words that aren't names
+          const filterWords = ['my', 'the', 'client', 'meeting', 'review', 'prep', 'for', 'at', 'with'];
+          const nameWords = extractedName.split(' ')
+            .filter(word => word.length > 0 && !filterWords.includes(word.toLowerCase()));
+
+          if (nameWords.length > 0) {
+            // Capitalize first letter of each word
+            customerName = nameWords
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ');
+            console.log('✅ Extracted customer name:', customerName);
+            break;
+          }
+        }
+      }
+
+      const params = {
+        clientName: customerName,
+        meetingTime: meetingTime,
+      };
+
+      console.log('📋 Client review prep params extracted:', params);
+
+      speak(`Preparing comprehensive client review for ${customerName} at ${meetingTime}`);
+
+      // Navigate to client review prep screen
+      console.log('🚀 Calling onNavigateToModule with:', 'client-review-prep', params);
+      if (onNavigateToModule) {
+        onNavigateToModule('client-review-prep', params);
+      } else {
+        console.error('❌ onNavigateToModule is not defined!');
+      }
+      setSearchInput('');
+      return;
+    }
+
     // Check for illustration pattern
     if (lowerCommand.includes('illustration') || lowerCommand.includes('run illustration') ||
         lowerCommand.includes('policy projection') || lowerCommand.includes('show illustration') ||
@@ -607,12 +685,28 @@ const HomeScreen = ({ userData, onNavigateToDemo, onNavigateToModule, addNotific
 
       // Extract parameters from command
       const ageMatch = originalCommand.match(/age (\d+)/i);
-      const withdrawalMatch = originalCommand.match(/\$?(\d+(?:,\d{3})*)/);
+
+      // Extract withdrawal amount - look for dollar amount after "with", "withdrawals", etc.
+      const withdrawalPatterns = [
+        /with\s+\$?(\d+(?:,\d{3})*)\s*(?:monthly|withdrawals?|per month)?/i,
+        /\$(\d+(?:,\d{3})*)\s+(?:monthly|withdrawals?|per month)/i,
+        /withdrawals?\s+(?:of\s+)?\$?(\d+(?:,\d{3})*)/i,
+      ];
+
+      let withdrawalAmount = 2000; // Default
+      for (const pattern of withdrawalPatterns) {
+        const match = originalCommand.match(pattern);
+        if (match && match[1]) {
+          withdrawalAmount = parseInt(match[1].replace(/,/g, ''));
+          console.log('✅ Extracted withdrawal amount:', withdrawalAmount);
+          break;
+        }
+      }
 
       const params = {
         customerName: customerName,
         age: ageMatch ? parseInt(ageMatch[1]) : 65,
-        monthlyWithdrawal: withdrawalMatch ? parseInt(withdrawalMatch[1].replace(/,/g, '')) : 2000,
+        monthlyWithdrawal: withdrawalAmount,
       };
 
       console.log('📊 Illustration params extracted:', params);
@@ -1030,7 +1124,7 @@ const HomeScreen = ({ userData, onNavigateToDemo, onNavigateToModule, addNotific
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={handleSearchSubmit}
-              placeholder="Type your request or click the mic to speak... (e.g., 'Send birthday wishes to John Smith')"
+              placeholder="Type your request or click the mic to speak... (e.g., 'Prep me for John Smith at 2:30' or 'Client review for Sarah Johnson')"
               variant="outlined"
               sx={{
                 '& .MuiOutlinedInput-root': {

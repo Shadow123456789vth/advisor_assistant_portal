@@ -51,6 +51,7 @@ import CalendarScreen from './screens/CalendarScreen';
 import MoreScreen from './screens/MoreScreen';
 import DemoScreen from './screens/DemoScreen';
 import IllustrationWorkflowScreen from './screens/IllustrationWorkflowScreen';
+import ClientReviewPrepScreen from './screens/ClientReviewPrepScreen';
 
 // Import voice commands
 import useVoiceCommands from './hooks/useVoiceCommands';
@@ -196,6 +197,8 @@ function App() {
   const [toastNotification, setToastNotification] = useState(null);
   const [showIllustration, setShowIllustration] = useState(false);
   const [illustrationParams, setIllustrationParams] = useState({ age: 65, withdrawal: 2000 });
+  const [showClientReviewPrep, setShowClientReviewPrep] = useState(false);
+  const [clientReviewParams, setClientReviewParams] = useState({ clientName: 'Sam Wright', meetingTime: '2:30 PM' });
   const homeScreenRef = useRef(null);
   const tasksScreenRef = useRef(null);
   const calendarScreenRef = useRef(null);
@@ -348,11 +351,19 @@ function App() {
       setIllustrationParams(params || { age: 65, withdrawal: 2000 });
       setShowIllustration(true);
       setShowDemo(false);
+      setShowClientReviewPrep(false);
+      setActiveModule(null);
+    } else if (moduleId === 'client-review-prep') {
+      setClientReviewParams(params || { clientName: 'Sam Wright', meetingTime: '2:30 PM' });
+      setShowClientReviewPrep(true);
+      setShowDemo(false);
+      setShowIllustration(false);
       setActiveModule(null);
     } else {
       setActiveModule(moduleId);
       setShowDemo(false);
       setShowIllustration(false);
+      setShowClientReviewPrep(false);
     }
   };
 
@@ -362,6 +373,10 @@ function App() {
 
   const handleBackFromIllustration = () => {
     setShowIllustration(false);
+  };
+
+  const handleBackFromClientReviewPrep = () => {
+    setShowClientReviewPrep(false);
   };
 
   const handleIllustrationToEngagement = (customerName) => {
@@ -544,6 +559,16 @@ function App() {
                         onClose={handleBackFromIllustration}
                         onNavigateToEngagement={handleIllustrationToEngagement}
                         illustrationParams={illustrationParams}
+                      />
+                    ) : showClientReviewPrep ? (
+                      <ClientReviewPrepScreen
+                        onClose={handleBackFromClientReviewPrep}
+                        clientData={{
+                          name: clientReviewParams.clientName,
+                          meetingTime: clientReviewParams.meetingTime,
+                          age: 42,
+                          accountValue: 485000,
+                        }}
                       />
                     ) : showDemo ? (
                       <DemoScreen customerName={demoCustomerName} />
