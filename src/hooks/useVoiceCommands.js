@@ -204,18 +204,43 @@ export const useVoiceCommands = (onCommand) => {
         (command.includes('withdrawal') && (command.includes('age') || command.includes('monthly')))) {
       console.log('📊 Illustration request detected:', command);
 
+      // Extract customer name from command
+      let customerName = 'John Smith'; // Default
+
+      // Patterns to extract name: "run illustration for [name]"
+      const namePatterns = [
+        /(?:run\s+)?illustration\s+for\s+([a-z\s]+?)(?:\s+at\s+age|\s+with|\s*$)/i,
+        /(?:show\s+)?illustration\s+for\s+([a-z\s]+?)(?:\s+at\s+age|\s+with|\s*$)/i,
+        /(?:policy\s+)?projection\s+for\s+([a-z\s]+?)(?:\s+at\s+age|\s+with|\s*$)/i,
+      ];
+
+      for (const pattern of namePatterns) {
+        const match = command.match(pattern);
+        if (match && match[1]) {
+          customerName = match[1].trim();
+          // Capitalize first letter of each word
+          customerName = customerName.split(' ')
+            .filter(word => word.length > 0)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+          console.log('✅ Extracted customer name:', customerName);
+          break;
+        }
+      }
+
       // Extract parameters from command
       const ageMatch = command.match(/age (\d+)/i);
       const withdrawalMatch = command.match(/\$?(\d+(?:,\d{3})*)/);
 
       const params = {
+        customerName: customerName,
         age: ageMatch ? parseInt(ageMatch[1]) : 65,
-        withdrawal: withdrawalMatch ? parseInt(withdrawalMatch[1].replace(/,/g, '')) : 2000,
+        monthlyWithdrawal: withdrawalMatch ? parseInt(withdrawalMatch[1].replace(/,/g, '')) : 2000,
       };
 
       console.log('✅ ILLUSTRATION TRIGGERED with params:', params);
       onCommand({ type: 'SHOW_ILLUSTRATION', params });
-      speak(`Generating policy illustration for age ${params.age} with $${params.withdrawal.toLocaleString()} monthly withdrawals. Analyzing projections and insights.`);
+      speak(`Generating policy illustration for ${customerName} at age ${params.age} with $${params.monthlyWithdrawal.toLocaleString()} monthly withdrawals. Analyzing projections and insights.`);
       return;
     }
 

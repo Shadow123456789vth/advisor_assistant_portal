@@ -68,7 +68,7 @@ const colors = {
   paleAqua: '#F2F7F6',
 };
 
-const HomeScreen = ({ userData, onNavigateToDemo, addNotification }) => {
+const HomeScreen = ({ userData, onNavigateToDemo, onNavigateToModule, addNotification }) => {
   const { speak, stop, isSpeaking, isEnabled, toggleEnabled, getRandomResponse } = useSpeech();
   const notificationsInitialized = useRef(false);
 
@@ -569,49 +569,98 @@ const HomeScreen = ({ userData, onNavigateToDemo, addNotification }) => {
 
   // Process search command
   const processSearchCommand = (command) => {
-    const lowerCommand = command.toLowerCase();
+    const lowerCommand = command.toLowerCase().trim();
+    const originalCommand = command.trim();
+
+    console.log('🔍 Processing search command:', originalCommand);
 
     // Check for illustration pattern
     if (lowerCommand.includes('illustration') || lowerCommand.includes('run illustration') ||
         lowerCommand.includes('policy projection') || lowerCommand.includes('show illustration') ||
         (lowerCommand.includes('withdrawal') && (lowerCommand.includes('age') || lowerCommand.includes('monthly')))) {
+
+      console.log('✅ Illustration pattern matched!');
+
+      // Extract customer name from command
+      let customerName = 'John Smith'; // Default
+
+      // Patterns to extract name: "run illustration for [name]" or "illustration for [name]"
+      const namePatterns = [
+        /(?:run\s+)?illustration\s+for\s+([a-z\s]+?)(?:\s+at\s+age|\s+with|\s*$)/i,
+        /(?:show\s+)?illustration\s+for\s+([a-z\s]+?)(?:\s+at\s+age|\s+with|\s*$)/i,
+        /(?:policy\s+)?projection\s+for\s+([a-z\s]+?)(?:\s+at\s+age|\s+with|\s*$)/i,
+      ];
+
+      for (const pattern of namePatterns) {
+        const match = originalCommand.match(pattern);
+        if (match && match[1]) {
+          customerName = match[1].trim();
+          // Capitalize first letter of each word
+          customerName = customerName.split(' ')
+            .filter(word => word.length > 0)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+          console.log('✅ Extracted customer name:', customerName);
+          break;
+        }
+      }
+
       // Extract parameters from command
-      const ageMatch = command.match(/age (\d+)/i);
-      const withdrawalMatch = command.match(/\$?(\d+(?:,\d{3})*)/);
+      const ageMatch = originalCommand.match(/age (\d+)/i);
+      const withdrawalMatch = originalCommand.match(/\$?(\d+(?:,\d{3})*)/);
 
       const params = {
+        customerName: customerName,
         age: ageMatch ? parseInt(ageMatch[1]) : 65,
-        withdrawal: withdrawalMatch ? parseInt(withdrawalMatch[1].replace(/,/g, '')) : 2000,
+        monthlyWithdrawal: withdrawalMatch ? parseInt(withdrawalMatch[1].replace(/,/g, '')) : 2000,
       };
 
-      speak(`Generating policy illustration for age ${params.age} with $${params.withdrawal.toLocaleString()} monthly withdrawals`);
+      console.log('📊 Illustration params extracted:', params);
+
+      speak(`Generating policy illustration for ${customerName} at age ${params.age} with $${params.monthlyWithdrawal.toLocaleString()} monthly withdrawals`);
 
       // Navigate to illustration workflow
+      console.log('🚀 Calling onNavigateToModule with:', 'illustration-workflow', params);
       if (onNavigateToModule) {
         onNavigateToModule('illustration-workflow', params);
+      } else {
+        console.error('❌ onNavigateToModule is not defined!');
       }
       setSearchInput('');
       return;
     }
 
     // Check for birthday wishes pattern
-    if (lowerCommand.includes('send birthday') || lowerCommand.includes('birthday wishes')) {
-      // Extract customer name
+    if (lowerCommand.includes('birthday')) {
+      // Extract customer name with more flexible patterns
       let customerName = 'Sam Wright'; // Default
 
       const patterns = [
-        /(?:send birthday (?:wishes|message) to |birthday (?:wishes|message) to )(.+)/i,
-        /(?:send (?:a )?birthday to )(.+)/i
+        // "send birthday wishes to john smith"
+        /(?:send\s+)?birthday\s+(?:wishes|message|card|greetings?)\s+(?:to\s+)?(.+)/i,
+        // "birthday to john smith"
+        /birthday\s+to\s+(.+)/i,
+        // "send birthday to john smith"
+        /send\s+(?:a\s+)?birthday\s+to\s+(.+)/i,
+        // More flexible: any text after "birthday" with common keywords
+        /birthday.*?(?:to|for)\s+([a-z\s]+?)(?:\s*$)/i,
       ];
 
       for (const pattern of patterns) {
-        const match = command.match(pattern);
+        const match = originalCommand.match(pattern);
         if (match && match[1]) {
           customerName = match[1].trim();
+
+          // Clean up any trailing words that aren't part of the name
+          customerName = customerName.replace(/\s+(please|now|today|tomorrow)$/i, '');
+
           // Capitalize first letter of each word
           customerName = customerName.split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .filter(word => word.length > 0)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join(' ');
+
+          console.log('✅ Extracted customer name:', customerName);
           break;
         }
       }
@@ -619,7 +668,11 @@ const HomeScreen = ({ userData, onNavigateToDemo, addNotification }) => {
       speak(`Preparing birthday outreach for ${customerName}`);
       onNavigateToDemo(customerName);
       setSearchInput('');
+      return;
     }
+
+    // If no pattern matched, show a helpful message
+    speak("I didn't understand that command. Try saying 'run illustration' or 'send birthday wishes to' followed by a name.");
   };
 
   // Handle search input submit (Enter key)
@@ -976,7 +1029,7 @@ const HomeScreen = ({ userData, onNavigateToDemo, addNotification }) => {
               fullWidth
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              onKeyPress={handleSearchSubmit}
+              onKeyDown={handleSearchSubmit}
               placeholder="Type your request or click the mic to speak... (e.g., 'Send birthday wishes to John Smith')"
               variant="outlined"
               sx={{
